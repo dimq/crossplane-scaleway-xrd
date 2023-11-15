@@ -1,0 +1,71 @@
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: PublicGatewayPATRule
+metadata:
+  name: vpc-public-gateway-pat-rule
+spec:
+  forProvider:
+    privatePort: 42
+    publicPort: 42
+    protocol: both
+    gatewayIdRef:
+      name: vpc-public-gateway
+    privateIp: 192.168.1.1
+providerConfigRef:
+  name: default
+---
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: GatewayNetwork
+metadata:
+  name: vpc-gateway-network
+spec:
+  forProvider:
+    gatewayIdRef:
+      name: vpc-public-gateway
+    dhcpIdRef:
+      name: vpc-public-gateway-dhcp
+    privateNetworkIdRef:
+      name: vpc-private-network
+providerConfigRef:
+  name: default
+---
+#apiVersion: vpc.scaleway.upbound.io/v1alpha1
+#kind: PrivateNetwork
+#metadata:
+#  name: vpc-private-network
+#spec:
+#  forProvider:
+#    name: crossplane-private-network
+#providerConfigRef:
+#  name: default
+---
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: PublicGateway
+metadata:
+  name: vpc-public-gateway
+spec:
+  forProvider:
+    name: crossplane-public-gateway
+    type: VPC-GW-S
+    ipIdRef:
+      name: vpc-public-gateway-ip
+providerConfigRef:
+  name: default
+---
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: PublicGatewayDHCP
+metadata:
+  name: vpc-public-gateway-dhcp
+spec:
+  forProvider:
+    subnet: "192.168.1.0/24"
+providerConfigRef:
+  name: default
+---
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: PublicGatewayIP
+metadata:
+  name: vpc-public-gateway-ip
+spec:
+  forProvider: {}
+providerConfigRef:
+  name: default

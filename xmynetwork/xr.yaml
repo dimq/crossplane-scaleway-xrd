@@ -1,0 +1,11 @@
+apiVersion: octo.com/v1alpha1
+kind: XMyNetwork
+metadata:
+  name: mouahahah
+spec:
+  name: mouahahah
+  cidr: "10.0.0.0/24"
+  bastion: true
+  tags:
+    - test
+    - another-test

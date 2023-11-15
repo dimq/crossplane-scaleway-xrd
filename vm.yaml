@@ -1,0 +1,11 @@
+apiVersion: instance.scaleway.upbound.io/v1alpha1
+kind: Server
+metadata:
+  name: instance-server
+spec:
+  forProvider:
+    name: crossplane-instance-server
+    image: "ubuntu_focal"
+    type: "PRO2-S"
+  providerConfigRef:
+    name: default

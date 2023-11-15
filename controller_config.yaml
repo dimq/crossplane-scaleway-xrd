@@ -1,0 +1,10 @@
+# Crossplane resource to be able to start the crossplane controller for scaleway in debug mode
+apiVersion: pkg.crossplane.io/v1alpha1
+kind: ControllerConfig
+metadata:
+  name: scw-config
+spec:
+  podSecurityContext:
+    fsGroup: 2000
+  args:
+  - '--debug'

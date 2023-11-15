@@ -1,0 +1,6 @@
+# Environment config setup to be able to pass values from a composite resource to another
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: EnvironmentConfig
+metadata:
+  name: pn-id
+data: {}

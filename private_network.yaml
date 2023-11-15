@@ -1,0 +1,10 @@
+apiVersion: vpc.scaleway.upbound.io/v1alpha1
+kind: PrivateNetwork
+metadata:
+  name: subnet-demo
+spec:
+  forProvider:
+    name: subnet-demo
+    tags:
+    - demo
+    - crossplane

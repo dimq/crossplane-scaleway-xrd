@@ -1,0 +1,12 @@
+# Config for the scaleway provider with the pointer to the secret containing the AK/SK of the scaleway project
+apiVersion: scaleway.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      name: scw-creds
+      namespace: upbound-system
+      key: credentials

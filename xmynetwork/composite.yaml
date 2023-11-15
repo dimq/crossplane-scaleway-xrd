@@ -1,0 +1,259 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xmynetworks.octo.com
+spec:
+  environment:
+    environmentConfigs:
+    - type: Reference
+      ref:
+        name: pn-id
+  resources:
+    - name: PrivateNetwork
+      base:
+        apiVersion: vpc.scaleway.upbound.io/v1alpha1
+        kind: PrivateNetwork
+        metadata:
+          name: octo-pn
+          labels:
+            name: vpc
+        spec:
+          forProvider:
+            name: octo-due
+            tags:
+              - demo
+              - crossplane
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-pn"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.tags"
+          toFieldPath: "spec.forProvider.tags"
+        - type: ToEnvironmentFieldPath
+          fromFieldPath: status.atProvider.id
+          toFieldPath: pnId
+    - name: PublicGatewayDHCP
+      base:
+        apiVersion: vpc.scaleway.upbound.io/v1alpha1
+        kind: PublicGatewayDHCP
+        metadata:
+          name: octo-dhcp
+          labels:
+            name: dhcp
+        spec:
+          forProvider:
+            subnet: "192.168.1.0/24"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.cidr"
+          toFieldPath: "spec.forProvider.subnet"
+    - name: PublicGatewayIP
+      base:
+        apiVersion: vpc.scaleway.upbound.io/v1alpha1
+        kind: PublicGatewayIP
+        metadata:
+          name: octo-ip
+          labels:
+            name: ip
+        spec:
+          forProvider:
+            tags: {}
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.tags"
+          toFieldPath: "spec.forProvider.tags"
+    - name: PublicGateway
+      base:
+        apiVersion: vpc.scaleway.upbound.io/v1alpha1
+        kind: PublicGateway
+        metadata:
+          name: octo-gw
+          labels:
+            name: gw
+        spec:
+          forProvider:
+            name: octo-gw
+            type: VPC-GW-S
+            bastionEnabled: false
+            tags: {}
+            ipIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: ip
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-gw"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.bastion"
+          toFieldPath: "spec.forProvider.bastionEnabled"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.tags"
+          toFieldPath: "spec.forProvider.tags"
+    - name: GatewayNetwork
+      base:
+        apiVersion: vpc.scaleway.upbound.io/v1alpha1
+        kind: GatewayNetwork
+        metadata:
+          name: octo-gn
+        spec:
+          forProvider:
+            cleanupDhcp: true
+            enabledDhcp: true
+            dhcpIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: dhcp
+            gatewayIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: gw
+            privateNetworkIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: vpc
+    - name: LB
+      base:
+        apiVersion: lb.scaleway.upbound.io/v1alpha1
+        kind: LB
+        metadata:
+          name: octo-lb
+          labels:
+            name: lb
+        spec:
+          forProvider:
+            name: octo-lb
+            type: LB-S
+            ipIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: lb-ip
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-lb"
+    - name: IP
+      base:
+        apiVersion: lb.scaleway.upbound.io/v1alpha1
+        kind: IP
+        metadata:
+          name: octo-lb-ip
+          labels:
+            name: lb-ip
+        spec:
+          forProvider: {}
+    - name: Backend
+      base:
+        apiVersion: lb.scaleway.upbound.io/v1alpha1
+        kind: Backend
+        metadata:
+          name: octo-lb-backend
+          labels:
+            name: lb-backend
+        spec:
+          forProvider:
+            name: octo-lb-backend
+            forwardProtocol: http
+            forwardPort: 80
+            lbIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: lb
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-lb-backend"
+    - name: Frontend
+      base:
+        apiVersion: lb.scaleway.upbound.io/v1alpha1
+        kind: Frontend
+        metadata:
+          name: octo-lb-frontend
+        spec:
+          forProvider:
+            name: octo-lb-frontend
+            inboundPort: 80
+            backendIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: lb-backend
+            lbIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: lb
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-lb-frontend"
+    - name: Server
+      base:
+        apiVersion: instance.scaleway.upbound.io/v1alpha1
+        kind: Server
+        metadata:
+          name: octo-vm
+          labels:
+            name: vm
+        spec:
+          forProvider:
+            name: octo-vm
+            image: "ubuntu_focal"
+            type: "PLAY2-PICO"
+            privateNetwork:
+              - pnId: id
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-vm"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.name"
+          toFieldPath: "spec.forProvider.name"
+        - type: FromEnvironmentFieldPath
+          fromFieldPath: pnId
+          toFieldPath: spec.forProvider.privateNetwork[0].pnId
+    - name: UserData
+      base:
+        apiVersion: instance.scaleway.upbound.io/v1alpha1
+        kind: UserData
+        metadata:
+          name: octo-ud
+        spec:
+          forProvider:
+            serverIdSelector:
+              matchControllerRef: true
+              matchLabels:
+                name: vm
+            key: cloud-init
+            value: |
+              #cloud-config
+              apt-update: true
+              apt-upgrade: true
+              packages:
+                - nginx
+  compositeTypeRef:
+    apiVersion: octo.com/v1alpha1
+    kind: XMyNetwork

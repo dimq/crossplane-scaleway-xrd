@@ -1,0 +1,37 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xmynetworks.octo.com
+spec:
+  group: octo.com
+  names:
+    kind: XMyNetwork
+    plural: xmynetworks
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "this is a description test"
+              cidr:
+                type: string
+              bastion:
+                type: boolean
+              tags:
+                type: array
+                items:
+                  type: string
+            required:
+              - name
+    served: true
+    referenceable: true
+# Here this is a composition that we don't want to give as claim to developpers
+      #  claimNames:
+      #    kind: MyNetworkClaim
+      #    plural: mynetworkclaim

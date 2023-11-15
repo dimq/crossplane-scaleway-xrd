@@ -1,0 +1,9 @@
+# Crossplane provider for scaleway
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-scaleway
+spec:
+  package: xpkg.upbound.io/scaleway/provider-scaleway:v0.1.0
+  controllerConfigRef:
+    name: scw-config
